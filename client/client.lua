@@ -20,6 +20,7 @@ local function notAccess()
 end
 
 local function goToFloor(data)
+    print("Data received in goToFloor:", json.encode(data))
     local elevator, floor = data.elevator, data.floor
     local coords = cfg.elevators[elevator][floor].coords
     local heading = cfg.elevators[elevator][floor].heading
@@ -34,22 +35,29 @@ local function goToFloor(data)
     DoScreenFadeIn(1500)
 end
 
+RegisterNetEvent('goToFloor', function(data)
+    goToFloor(data)
+end)
+
+RegisterNetEvent('notAccess', function()
+    notAccess()
+end)
+
 local function openElevatoMenu(data)
     local elevator = data.elevator
     local floor = data.floor
     local elevatorData = cfg.elevators[elevator]
     local Options = {}
-    -- print(json.encode(data, {indent = true}))
+    
     for k, v in pairs(elevatorData) do
         local option = {
             title = v.title,
             description = v.description,
-            event = '',
             icon = v.icon or '', 
         }
 
         if k == floor then
-            option.title = option.title .. ' ' 
+            option.title = option.title .. ' '
         elseif v.groups then
             local found = false
             for _, group in ipairs(v.groups) do
@@ -59,13 +67,13 @@ local function openElevatoMenu(data)
                 end
             end
             if found then
-                option.event = goToFloor
+                option.event = 'goToFloor'
                 option.args = { elevator = elevator, floor = k }
             else
-                option.event = notAccess
+                option.event = 'notAccess'
             end
         else
-            option.event = goToFloor
+            option.event = 'goToFloor'
             option.args = { elevator = elevator, floor = k }
         end
 
@@ -80,6 +88,7 @@ local function openElevatoMenu(data)
 
     lib.showContext('elevators_menu')
 end
+
 
 for k, elevator in pairs(cfg.elevators) do
     for floor, data in pairs(elevator) do
